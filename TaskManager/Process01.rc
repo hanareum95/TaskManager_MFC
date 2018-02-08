@@ -84,16 +84,18 @@ BEGIN
     DEFPUSHBUTTON   "확인",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_PROCESS01_DIALOG DIALOGEX 0, 0, 320, 200
+IDD_PROCESS01_DIALOG DIALOGEX 0, 0, 319, 381
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Process01"
 FONT 9, "굴림"
 BEGIN
-    DEFPUSHBUTTON   "확인",IDOK,207,179,50,14
-    PUSHBUTTON      "취소",IDCANCEL,263,179,50,14
+    DEFPUSHBUTTON   "확인",IDOK,207,360,50,14
+    PUSHBUTTON      "취소",IDCANCEL,262,360,50,14
     CONTROL         "List2",IDC_LIST2,"SysListView32",WS_BORDER | WS_TABSTOP,
-                    7,7,306,166
+                    7,7,305,262
+    EDITTEXT        IDC_EDIT1,61,359,112,14,ES_AUTOHSCROLL
+    LTEXT           "프로세스 수 : ",IDC_STATIC,14,362,44,8
 END
 
 
@@ -118,8 +120,9 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "041204B0"
+        BLOCK "041204b0"
         BEGIN
+            VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "Process01 MFC 응용 프로그램\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
@@ -127,8 +130,10 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2018\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "Process01.EXE\0"
+            VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Process01 응용 프로그램\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -159,12 +164,28 @@ BEGIN
     IDD_PROCESS01_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 313
+        RIGHTMARGIN, 312
         TOPMARGIN, 7
-        BOTTOMMARGIN, 193
+        BOTTOMMARGIN, 374
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU DISCARDABLE 
+BEGIN
+    POPUP "listContextMenu"
+    BEGIN
+        MENUITEM "파일위치열기",                ID_MENUITEM32771
+        MENUITEM "프로세스 끝내기",             ID_MENUITEM32772
+        MENUITEM "속성",                        ID_MENUITEM32773
+    END
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

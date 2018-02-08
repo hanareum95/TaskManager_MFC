@@ -7,10 +7,15 @@
  
 #include <tlhelp32.h> //프로세스 정보
 
+#include <string>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+
+using namespace std;
+
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -65,6 +70,7 @@ CProcess01Dlg::CProcess01Dlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CProcess01Dlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CProcess01Dlg)
+	m_debug = _T("");
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -75,6 +81,7 @@ void CProcess01Dlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CProcess01Dlg)
 	DDX_Control(pDX, IDC_LIST2, m_ctrlList);
+	DDX_Text(pDX, IDC_EDIT1, m_debug);
 	//}}AFX_DATA_MAP
 }
 
@@ -119,8 +126,8 @@ BOOL CProcess01Dlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	
 	//insert column
-	m_ctrlList.InsertColumn(0, _T("Process name"), LVCFMT_CENTER, 120);
-	m_ctrlList.InsertColumn(1, _T("PID"), LVCFMT_CENTER, 70);
+	m_ctrlList.InsertColumn(0, _T("PID"), LVCFMT_CENTER, 70);
+	m_ctrlList.InsertColumn(1, _T("Process name"), LVCFMT_CENTER, 120);
 	m_ctrlList.InsertColumn(2, _T("Parent PID"), LVCFMT_CENTER, 80);
 	m_ctrlList.InsertColumn(3, _T("Threads"), LVCFMT_CENTER, 70);
 	m_ctrlList.InsertColumn(4, _T("CPU"), LVCFMT_CENTER, 60);
@@ -128,9 +135,10 @@ BOOL CProcess01Dlg::OnInitDialog()
 	m_ctrlList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_ctrlList.ModifyStyle(LVS_TYPEMASK, LVS_REPORT); 
 
-	//addItem();
-	CWinThread *pThread = ::AfxBeginThread(addItem, this);
-	pThread->ResumeThread();
+	//thread 
+	CWinThread *pThread;
+	m_eThreadWork = THREAD_RUNNING;
+	pThread = AfxBeginThread(addItem, this);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -186,46 +194,117 @@ HCURSOR CProcess01Dlg::OnQueryDragIcon()
 
 UINT CProcess01Dlg::addItem(LPVOID pParam)
 {
-	//Process info
-	HANDLE hSnapshot;
-	PROCESSENTRY32 processEntry;
-	
-	int nProcessNum = 0;
-
-	hSnapshot =CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	processEntry.dwSize = sizeof(PROCESSENTRY32);
-
+	char c[10];
+	map<int, ProcessInfo> processMap;
 	CProcess01Dlg* ptr = (CProcess01Dlg*) pParam;
 	
-	if(Process32First(hSnapshot, &processEntry))
+	while(ptr->m_eThreadWork == THREAD_RUNNING)
 	{
-		do
-		{
-		//Item add
-
-			char c[10];
+		//ptr->m_ctrlList.DeleteAllItems();
 		
-			//Process name
-			ptr->m_ctrlList.InsertItem(nProcessNum, processEntry.szExeFile);
+		//Process info
+		HANDLE hSnapshot;
+		PROCESSENTRY32 processEntry;
+		
+		int nProcessNum = 0;
+		CString str;
+		
 
-			//PID
-			ptr->m_ctrlList.SetItemText(nProcessNum, 1, _T( itoa(processEntry.th32ProcessID,c,10)));
-
-			//Parent PID
-			ptr->m_ctrlList.SetItemText(nProcessNum, 2, _T( itoa(processEntry.th32ParentProcessID,c,10)));
-
-			//Thread
-			ptr->m_ctrlList.SetItemText(nProcessNum, 3, _T( itoa(processEntry.cntThreads,c,10)));
-
-			//cntUsage
-			ptr->m_ctrlList.SetItemText(nProcessNum, 4, _T( itoa(processEntry.cntUsage,c,10)));
-
-			nProcessNum++;
-
-			::Sleep(10);
-
-		}while(Process32Next(hSnapshot, &processEntry));
+		hSnapshot =CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		processEntry.dwSize = sizeof(PROCESSENTRY32);
+		
+		//to use findItem()
+		LVFINDINFO lv;
+		lv.flags = LVFI_PARTIAL|LVFI_STRING;
+		int nFindIndex = 0;
+		
+		if(Process32First(hSnapshot, &processEntry))
+		{
+			do
+			{
+				ProcessInfo info(processEntry.szExeFile,
+					processEntry.th32ProcessID,
+					processEntry.th32ParentProcessID,
+					processEntry.cntThreads,
+					processEntry.cntUsage);
+								
+				//list에 없음 -> insert
+				if( processMap.find(info.GetPID()) == processMap.end() )
+				{
+					
+					processMap.insert(pair<int, ProcessInfo>(processEntry.th32ProcessID, info));
+					
+					//Item add
+					
+					//PID
+					ptr->m_ctrlList.InsertItem(nProcessNum, itoa(info.GetPID(),c,10));
+					
+					//Process name
+					ptr->m_ctrlList.SetItemText(nProcessNum, 1, _T(info.GetPName().c_str()));
+					
+					//Parent PID
+					ptr->m_ctrlList.SetItemText(nProcessNum, 2, _T( itoa(info.GetParentPID(),c,10)));
+					
+					//Thread
+					ptr->m_ctrlList.SetItemText(nProcessNum, 3, _T( itoa(info.GetThreadNum(),c,10)));
+					
+					//cntUsage
+					ptr->m_ctrlList.SetItemText(nProcessNum, 4, _T( itoa(info.GetCPU(),c,10)));
+					
+					nProcessNum++;			
+					str.Format("%d",ptr->m_ctrlList.GetItemCount());
+					ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str+"*");
+				}
+				//list에 있음 -> update
+				else
+				{
+					str.Format("%d",ptr->m_ctrlList.GetItemCount());
+					ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);
+				}
+			}while(Process32Next(hSnapshot, &processEntry));
+		}
+		Sleep(3000);
 	}
-
+	
 	return 0;
+}
+
+/**
+bool CProcess01Dlg::iterateItems(LPVOID pParam,int nPID)
+{
+	CProcess01Dlg* ptr = (CProcess01Dlg*) pParam;
+	CString str, str2;
+	int nCol = 0;    // to search in the fisrt column
+	
+	str.Format("%d", nPID);
+	
+	str2.Format("%d", ptr->m_ctrlList.GetItemCount());
+	//ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);
+
+	for (int i = ptr->m_ctrlList.GetItemCount()-1 ; i >= 0 ; i--)
+	{
+		CString szText = ptr->m_ctrlList.GetItemText(i, nCol);
+		if(i==2)
+		ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(szText+"**"+str);
+		if (szText == str)
+		{
+			// found it - do something
+		
+		//	ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);	
+			return true;
+		}
+	}
+	return false;
+}
+*/
+
+void CProcess01Dlg::OnContextMenu( CWnd *pWnd, CPoint point)
+{
+	CMenu popup;
+	CMenu *MyMenu;
+	CPoint pt;
+	GetCursorPos(&pt);
+	popup.LoadMenu(IDR_MENU1);
+	MyMenu = popup.GetSubMenu(0);
+	MyMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, this);
 }
