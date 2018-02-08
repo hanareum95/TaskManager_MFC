@@ -258,6 +258,8 @@ UINT CProcess01Dlg::addItem(LPVOID pParam)
 				//list¿¡ ÀÖÀ½ -> update
 				else
 				{
+					processMap.insert(pair<int, ProcessInfo>(processEntry.th32ProcessID, info));
+					
 					str.Format("%d",ptr->m_ctrlList.GetItemCount());
 					ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);
 				}
@@ -268,35 +270,6 @@ UINT CProcess01Dlg::addItem(LPVOID pParam)
 	
 	return 0;
 }
-
-/**
-bool CProcess01Dlg::iterateItems(LPVOID pParam,int nPID)
-{
-	CProcess01Dlg* ptr = (CProcess01Dlg*) pParam;
-	CString str, str2;
-	int nCol = 0;    // to search in the fisrt column
-	
-	str.Format("%d", nPID);
-	
-	str2.Format("%d", ptr->m_ctrlList.GetItemCount());
-	//ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);
-
-	for (int i = ptr->m_ctrlList.GetItemCount()-1 ; i >= 0 ; i--)
-	{
-		CString szText = ptr->m_ctrlList.GetItemText(i, nCol);
-		if(i==2)
-		ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(szText+"**"+str);
-		if (szText == str)
-		{
-			// found it - do something
-		
-		//	ptr->GetDlgItem(IDC_EDIT1)->SetWindowText(str);	
-			return true;
-		}
-	}
-	return false;
-}
-*/
 
 void CProcess01Dlg::OnContextMenu( CWnd *pWnd, CPoint point)
 {

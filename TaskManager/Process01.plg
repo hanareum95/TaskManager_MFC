@@ -6,8 +6,7 @@
 --------------------Configuration: Process01 - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating command line "rc.exe /l 0x412 /fo"Debug/Process01.res" /d "_DEBUG" /d "_AFXDLL" "C:\Project\Process01\Process01.rc"" 
-Creating temporary file "C:\Users\areum\AppData\Local\Temp\RSPE674.tmp" with contents
+Creating temporary file "C:\Users\areum\AppData\Local\Temp\RSP2EC2.tmp" with contents
 [
 /nologo /subsystem:windows /incremental:yes /pdb:"Debug/Process01.pdb" /debug /machine:I386 /out:"Debug/Process01.exe" /pdbtype:sept 
 .\Debug\Process01.obj
@@ -16,9 +15,8 @@ Creating temporary file "C:\Users\areum\AppData\Local\Temp\RSPE674.tmp" with con
 .\Debug\StdAfx.obj
 .\Debug\Process01.res
 ]
-Creating command line "link.exe @C:\Users\areum\AppData\Local\Temp\RSPE674.tmp"
+Creating command line "link.exe @C:\Users\areum\AppData\Local\Temp\RSP2EC2.tmp"
 <h3>Output Window</h3>
-Compiling resources...
 Linking...
 
 
